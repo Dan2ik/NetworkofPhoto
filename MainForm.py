@@ -1,5 +1,5 @@
 # main.py
-from tkinter import Tk, Canvas, filedialog
+from tkinter import Tk, Canvas, filedialog, Text, Scrollbar, END
 from PIL import ImageGrab, Image, ImageOps
 import tkinter as tk
 from tkinter import messagebox, filedialog
@@ -13,6 +13,7 @@ EQUIPMENT_TYPES = {
     "Коммутатор": "orange",
     "Сервер": "purple",
     "Крепление кабеля": "gray",
+    "Клиент": "yellow",
 }
 
 class EquipmentDialog(tk.Toplevel):
@@ -72,7 +73,8 @@ class MainForm(tk.Tk):
         # Пункт "О программе"
         about_menu = tk.Menu(menubar, tearoff=0)
         about_menu.add_command(label="О программе", command=self.show_about)
-        menubar.add_cascade(label="Справка", menu=about_menu)
+        about_menu.add_command(label="Справка", command=self.show_spravka)
+        menubar.add_cascade(label="Информация", menu=about_menu)
 
         # Создаем левую панель для кнопок
         left_panel = tk.Frame(self, bg="lightgray", width=150)
@@ -134,10 +136,71 @@ class MainForm(tk.Tk):
         # Показываем выбранное меню, если оно было скрыто
         if not menu_to_show.winfo_ismapped():
             menu_to_show.pack()
+    def show_spravka(self):
+        # Создаем новое окно
+        about_window = tk.Toplevel(self)
+        about_window.title("Справка")
+        about_window.geometry("600x400")  # Устанавливаем размер окна
+
+        # Добавляем текстовое поле с прокруткой
+        text_area = Text(about_window, wrap="word", font=("Arial", 12))
+        text_area.pack(side="left", fill="both", expand=True)
+
+        # Добавляем вертикальную прокрутку
+        scrollbar = Scrollbar(about_window, command=text_area.yview)
+        scrollbar.pack(side="right", fill="y")
+        text_area.config(yscrollcommand=scrollbar.set)
+
+        # Вставляем текст
+        about_text = (
+            "Инструкция по использованию"
+            "Запуск программы: Запустите программу"
+            "Загрузка изображения: Нажмите кнопку ""Проект"" и выберите ""Загрузить"", чтобы загрузить изображение на холст."
+            "Добавление оборудования:"
+            "Нажмите кнопку ""Оборудование"" и выберите ""Добавить оборудование""."
+            "В открывшемся окне выберите тип оборудования и введите его стоимость."
+            "Кликните на холст, чтобы добавить оборудование."
+            "Добавление провода связи:"
+            "Нажмите кнопку ""Оборудование"" и выберите ""Добавление провода связи между точками""."
+            "Кликните сначала на один круг, затем на другой, чтобы соединить их линией."
+            "Сохранение проекта: Нажмите кнопку ""Проект"" и выберите ""Сохранить"", чтобы сохранить текущее состояние холста в файл."
+            "Расчет стоимости: Нажмите кнопку ""Расчет"", чтобы выполнить расчет общей длины кабеля и стоимости проекта."
+        )
+        text_area.insert(END, about_text)
+        text_area.config(state="disabled")  # Запрещаем редактирование текста
 
     def show_about(self):
-        # Показываем информацию о программе
-        messagebox.showinfo("О программе", "Это пример программы с меню и кнопками.")
+        # Создаем новое окно
+        about_window = tk.Toplevel(self)
+        about_window.title("О программе")
+        about_window.geometry("600x400")  # Устанавливаем размер окна
+
+        # Добавляем текстовое поле с прокруткой
+        text_area = Text(about_window, wrap="word", font=("Arial", 12))
+        text_area.pack(side="left", fill="both", expand=True)
+
+        # Добавляем вертикальную прокрутку
+        scrollbar = Scrollbar(about_window, command=text_area.yview)
+        scrollbar.pack(side="right", fill="y")
+        text_area.config(yscrollcommand=scrollbar.set)
+
+        # Вставляем текст
+        about_text = (
+            "Программа была разработана студентами группы 23ПИнж(б)РПиС-1 "
+            "Барсуковым Максимом Вячеславовичем и Мендыгалиевым Данияром Серковичем "
+            "в рамках выполнения лабораторной работы по дисциплине «Компьютерные сети». "
+            "Программа предназначена для проектирования и моделирования компьютерных сетей, "
+            "что позволяет студентам и специалистам отрабатывать навыки создания сетевых конфигураций, "
+            "анализа их работы и оптимизации параметров. Она включает в себя инструменты для "
+            "визуализации топологии сети, настройки сетевых устройств (таких как маршрутизаторы, "
+            "коммутаторы и серверы), а также тестирования производительности и безопасности сети. "
+            "Разработка программы направлена на упрощение процесса обучения и предоставление "
+            "пользователям удобного инструмента для выполнения практических задач в области "
+            "проектирования компьютерных сетей. Программа может быть использована как для учебных "
+            "целей, так и для решения прикладных задач в профессиональной деятельности."
+        )
+        text_area.insert(END, about_text)
+        text_area.config(state="disabled")  # Запрещаем редактирование текста
 
     def load_image(self):
         # Открываем диалог выбора файла
@@ -215,7 +278,6 @@ class MainForm(tk.Tk):
                 self.canvas.unbind("<Button-1>")  # Отключаем обработчик кликов
 
     def save_project(self):
-
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG files", "*.png"), ("All files", "*.*")],
@@ -233,6 +295,7 @@ class MainForm(tk.Tk):
         img = ImageOps.invert(img.convert("RGB"))  # Инвертируем цвета, если нужно
         img.save(file_path, "png")
         print(f"Canvas сохранен в {file_path}")
+
         report_path = filedialog.asksaveasfilename(
             defaultextension=".txt",
             filetypes=[("txt files", "*.txt"), ("All files", "*.*")],
@@ -273,7 +336,6 @@ class MainForm(tk.Tk):
             for eq_type, count in equipment_count.items():
                 file.write(f"- {eq_type}: {count} шт.\n")
             file.write(f"\nОбщая стоимость проекта: {total_equipment + total_cost} руб.\n")
-        # Выводим результат
 
     def calculation(self):
         self.project_menu.pack_forget()
@@ -303,3 +365,8 @@ class MainForm(tk.Tk):
             f"Стоимость оборудования: {total_equipment:.2f} руб.\n"
             f"Стоимость общая: {total_equipment + total_cost:.2f} руб."
         )
+
+# Запуск приложения
+if __name__ == "__main__":
+    app = MainForm()
+    app.mainloop()
