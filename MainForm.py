@@ -31,7 +31,7 @@ class EquipmentDialog(tk.Toplevel):
         self.equipment_combobox.current(0)  # Устанавливаем первый тип по умолчанию
         self.equipment_combobox.pack(pady=5)
 
-        # Поле для ввода стоимости
+        # Поле для ввода стоимости оборудования
         self.cost_label = tk.Label(self, text="Введите стоимость оборудования (руб.):")
         self.cost_label.pack(pady=5)
 
@@ -59,6 +59,40 @@ class EquipmentDialog(tk.Toplevel):
         """Показывает окно и возвращает результат."""
         self.wait_window()  # Ждем, пока окно не закроется
         return self.equipment_type, self.cost
+
+class CableCostDialog(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Изменить стоимость кабеля")
+        self.geometry("300x150")
+        self.parent = parent
+
+        # Поле для ввода стоимости кабеля
+        self.cable_cost_label = tk.Label(self, text="Введите стоимость кабеля за метр (руб.):")
+        self.cable_cost_label.pack(pady=5)
+
+        self.cable_cost_entry = tk.Entry(self)
+        self.cable_cost_entry.pack(pady=5)
+
+        # Кнопка "ОК"
+        self.ok_button = tk.Button(self, text="ОК", command=self.on_ok)
+        self.ok_button.pack(pady=10)
+
+        # Переменная для хранения результата
+        self.cable_cost = None
+
+    def on_ok(self):
+        """Обработчик нажатия кнопки ОК."""
+        try:
+            self.cable_cost = float(self.cable_cost_entry.get())
+            self.destroy()  # Закрываем окно
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите корректную стоимость.")
+
+    def show(self):
+        """Показывает окно и возвращает результат."""
+        self.wait_window()  # Ждем, пока окно не закроется
+        return self.cable_cost
 
 class MainForm(tk.Tk):
     def __init__(self):
@@ -110,6 +144,10 @@ class MainForm(tk.Tk):
         equipment_3_button = tk.Button(self.equipment_menu, text="Добавление провода связи между точками (нужно нажать на одну точку потом на вторую)", command=self.start_line_creation)
         equipment_3_button.pack(pady=5, padx=20, fill="x")
 
+        # Кнопка "Изменить стоимость кабеля"
+        cable_cost_button = tk.Button(left_panel, text="Изменить стоимость кабеля", command=self.change_cable_cost)
+        cable_cost_button.pack(pady=10, padx=10, fill="x")
+
         # Кнопка "Расчет" (без подпунктов)
         calculation_button = tk.Button(left_panel, text="Расчет", command=self.calculation)
         calculation_button.pack(pady=10, padx=10, fill="x")
@@ -127,6 +165,7 @@ class MainForm(tk.Tk):
         self.selected_circles = []  # Список выбранных кругов для создания линии
         self.is_creating_circle = False  # Флаг для создания круга
         self.is_creating_line = False  # Флаг для создания линии
+        self.cable_cost_per_meter = 40  # Стоимость кабеля за метр по умолчанию
 
     def show_menu(self, menu_to_show):
         # Скрываем все выпадающие меню
@@ -136,6 +175,16 @@ class MainForm(tk.Tk):
         # Показываем выбранное меню, если оно было скрыто
         if not menu_to_show.winfo_ismapped():
             menu_to_show.pack()
+
+    def change_cable_cost(self):
+        """Открывает диалоговое окно для изменения стоимости кабеля."""
+        dialog = CableCostDialog(self)
+        new_cable_cost = dialog.show()
+
+        if new_cable_cost is not None:
+            self.cable_cost_per_meter = new_cable_cost
+            messagebox.showinfo("Успех", f"Стоимость кабеля изменена на {new_cable_cost} руб./метр")
+
     def show_spravka(self):
         # Создаем новое окно
         about_window = tk.Toplevel(self)
@@ -320,7 +369,7 @@ class MainForm(tk.Tk):
         total_length_meters = total_length / 80
 
         # Рассчитываем общую стоимость
-        total_cost = total_length_meters * 40
+        total_cost = total_length_meters * self.cable_cost_per_meter
         equipment_count = {}  # Счетчик оборудования
         for circle in self.circles:
             if circle.equipment_type in equipment_count:
@@ -355,7 +404,7 @@ class MainForm(tk.Tk):
         total_length_meters = total_length / 80
 
         # Рассчитываем общую стоимость
-        total_cost = total_length_meters * 40
+        total_cost = total_length_meters * self.cable_cost_per_meter
 
         # Выводим результат
         messagebox.showinfo(
